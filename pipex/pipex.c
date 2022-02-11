@@ -6,58 +6,63 @@
 /*   By: slott <marvin@42lausanne.ch>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/20 14:44:01 by slott             #+#    #+#             */
-/*   Updated: 2022/02/01 17:25:31 by slott            ###   ########.fr       */
+/*   Updated: 2022/02/10 14:29:00 by slott            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "pipex.h"
-#define STDIN 0
-#define STDOUT 1
-#define STDERR 2
 
 int	main(int argc, char *argv[], char *envp[])
 {
-	char	*cmd;
-	char	**args;
-	int		p[2];
-	int		fdout;
-	int		fdin;
-	pid_t	pid;
-	pid_t	pid2;
+	t_pipe	stru;
 
 	if (argc != 5)
-	{
-		printf("Nombres incorrects d'arguments\n");
+		return (write(STDERR, "Invalid number of arguments\n", 28));
+	stru.fdin = openfile(argv[1], STDIN);
+	if (stru.fdin < 0)
+		return (write(STDERR, "Error while opening infile\n", 27));
+	stru.fdout = openfile(argv[4], STDOUT);
+	if (stru.fdout < 0)
+		return (write(STDERR, "Error while opening outfile\n", 28));
+	if (pipe(stru.p) < 0)
+		return (write(STDERR, "Error while creating pipe\n", 26));
+	stru.pid = fork();
+	if (stru.pid == 0)
+		if (!first_child(&stru, argv, envp))
+			return (write(STDERR, "Error: command 1 not found\n", 27));
+	waitpid(stru.pid, NULL, 0);
+	stru.pid2 = fork();
+	if (stru.pid2 == 0)
+		if (!second_child(&stru, argv, envp))
+			return (write(STDERR, "Error: command 2 not found\n", 27));
+	close_pipe(&stru);
+	waitpid(stru.pid2, NULL, 0);
+	return (1);
+}
+
+int	first_child(t_pipe *stru, char *argv[], char *envp[])
+{
+	dup2(stru->fdin, STDIN);
+	dup2(stru->p[1], STDOUT);
+	close_pipe(stru);
+	stru->args = ft_split(argv[2], ' ');
+	stru->cmd = get_path(envp, stru->args[0]);
+	if (!stru->cmd)
 		return (0);
-	}
-	fdin = openfile(argv[1], STDIN);
-	fdout = openfile(argv[4], STDOUT);
-	pipe(p);
-	pid = fork();
-	if (pid == 0)
-	{
-		dup2(fdin, STDIN);
-		dup2(p[1], STDOUT);
-		close(p[0]);
-		close(p[1]);
-		args = ft_split(argv[2], ' ');
-		cmd = get_path(envp, args[0]);
-		execve(cmd, args, envp);
-	}
-	pid2 = fork();
-	if (pid2 == 0)
-	{
-		dup2(fdout, STDOUT);
-		dup2(p[0], STDIN);
-		close(p[0]);
-		close(p[1]);
-		args = ft_split(argv[3], ' ');
-		cmd = get_path(envp, args[0]);
-		execve(cmd, args, envp);
-	}
-	close(p[0]);
-	close(p[1]);
-	waitpid(pid, NULL, 0);
-	waitpid(pid2, NULL, 0);
+	execve(stru->cmd, stru->args, envp);
+	return (1);
+}
+
+int	second_child(t_pipe *stru, char *argv[], char *envp[])
+{	
+	dup2(stru->fdout, STDOUT);
+	dup2(stru->p[0], STDIN);
+	close_pipe(stru);
+	stru->args = ft_split(argv[3], ' ');
+	stru->cmd = get_path(envp, stru->args[0]);
+	if (!stru->cmd)
+		return (0);
+	execve(stru->cmd, stru->args, envp);
+	return (1);
 }
 
 int	openfile(char *filename, int m)
@@ -68,7 +73,7 @@ int	openfile(char *filename, int m)
 	{
 		if (access(filename, F_OK))
 		{
-			write(1, "INFILE fichier introuvable", 26);
+			write(1, "INFILE fichier introuvable\n", 27);
 			return (STDIN);
 		}
 		fd = open(filename, O_RDONLY);
@@ -76,7 +81,8 @@ int	openfile(char *filename, int m)
 	}
 	else
 	{
-		fd = open(filename, O_CREAT | O_RDWR);
+		fd = open(filename, O_CREAT | O_RDWR,
+				S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 		return (fd);
 	}
 }

@@ -6,7 +6,7 @@
 /*   By: slott <marvin@42lausanne.ch>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/22 14:25:30 by slott             #+#    #+#             */
-/*   Updated: 2022/01/31 19:08:42 by slott            ###   ########.fr       */
+/*   Updated: 2022/02/10 14:11:37 by slott            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "pipex.h"
@@ -79,4 +79,10 @@ int	ft_strlen(const char *str)
 	while (str[i])
 		i++;
 	return (i);
+}
+
+void	close_pipe(t_pipe *stru)
+{
+	close(stru->p[0]);
+	close(stru->p[1]);
 }

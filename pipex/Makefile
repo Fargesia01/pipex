@@ -1,4 +1,4 @@
-SRCS	= pipex.c	
+SRCS	= pipex.c ft_split.c utils.c	
 
 HEAD	= pipex.h
 
@@ -18,7 +18,7 @@ CFLAGS	= -Wall -Wextra -Werror
 	$(CC) $(CFLAGS) -c $< -o $(<:.c=.o) -I $(HEAD)
 
 $(NAME): $(OBJS)
-	 $(LIB) $(NAME) $(OBJS)
+	 $(CC) -o $(NAME) $(OBJS)
 
 all:	$(NAME)
 

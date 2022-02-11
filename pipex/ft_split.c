@@ -6,7 +6,7 @@
 /*   By: slott <marvin@42lausanne.ch>               +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/01/22 14:50:35 by slott             #+#    #+#             */
-/*   Updated: 2022/01/31 14:55:57 by slott            ###   ########.fr       */
+/*   Updated: 2022/02/10 13:38:31 by slott            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "pipex.h"
@@ -25,7 +25,7 @@ char	**ft_split(const char *s, char ch)
 	c[1] = 0;
 	if (!(s))
 		return (NULL);
-	tab = malloc(compteur_case(s, ch) * sizeof(char *) + 1);
+	tab = malloc((compteur_case(s, ch) + 1) * sizeof(char *));
 	if (!(tab))
 		return (NULL);
 	while (*s)
